@@ -13,7 +13,7 @@
  *      call the Gmail API directly. If not connected yet, return a
  *      connect-on-first-call message with the broker consent URL (never hard-errors).
  *   2. Raw passthrough escape hatch (holds no secret): if the caller sends
- *      `Authorization: Bearer <raw-google-access-token>` (a ya29.* access token),
+ *      `Authorization: Bearer <raw-google-access-token>` (any access-token format),
  *      it is used directly. Note: because this MCP no longer holds a Google client
  *      secret, a raw *refresh* token can no longer be exchanged here — pass an
  *      access token, or use the broker.
@@ -127,7 +127,7 @@ app.get('/', (_req, res) => {
       alternativeAuth: {
         type: 'bearer-passthrough',
         description:
-          'Escape hatch (no secret held): pass a raw Google access token (ya29.*) as Bearer.',
+          'Escape hatch (no secret held): pass a raw Google access token as Bearer.',
       },
     },
     configTemplate: {
@@ -266,7 +266,7 @@ app.post('/mcp', async (req, res) => {
 
   const raw = rawPassthrough(req);
   if (raw) {
-    const client = new GmailClient(raw, '', '');
+    const client = new GmailClient({ type: 'access_token', value: raw });
     resolveClient = async () => ({ kind: 'client', client });
   } else {
     if (!brokerConfigured) {
@@ -288,7 +288,7 @@ app.post('/mcp', async (req, res) => {
     resolveClient = async () => {
       const tok = await resolveToken(principal);
       if (tok.status === 'connected') {
-        return { kind: 'client', client: new GmailClient(tok.accessToken, '', '') };
+        return { kind: 'client', client: new GmailClient({ type: 'access_token', value: tok.accessToken }) };
       }
       if (tok.status === 'not_connected') {
         return { kind: 'connect', message: await connectMessage(principal) };

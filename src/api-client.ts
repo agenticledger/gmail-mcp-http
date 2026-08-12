@@ -1,31 +1,29 @@
 /**
  * Gmail API Client
- * Auth: Takes a Google OAuth refresh token, exchanges for access token per request.
+ * Auth: Uses an explicit access token or exchanges an explicit legacy refresh token.
  * Base URL: https://gmail.googleapis.com/gmail/v1
  */
 
 const BASE_URL = 'https://gmail.googleapis.com/gmail/v1';
 const TOKEN_URL = 'https://oauth2.googleapis.com/token';
 
+export type GoogleCredential =
+  | { type: 'access_token'; value: string }
+  | { type: 'refresh_token'; value: string };
+
 export class GmailClient {
-  private refreshToken: string;
-  private clientId: string;
-  private clientSecret: string;
   private cachedAccessToken: string | null = null;
   private tokenExpiresAt: number = 0;
 
-  constructor(refreshToken: string, clientId: string, clientSecret: string) {
-    this.refreshToken = refreshToken;
-    this.clientId = clientId;
-    this.clientSecret = clientSecret;
-  }
+  constructor(
+    private credential: GoogleCredential,
+    private clientId = '',
+    private clientSecret = '',
+  ) {}
 
   private async getAccessToken(): Promise<string> {
-    // Connections Broker passthrough: a broker-issued Google access token arrives
-    // already exchanged. Google access tokens are prefixed ya29.; use directly
-    // and skip the exchange. Refresh tokens (1//…) fall through unchanged.
-    if (this.refreshToken.startsWith('ya29.')) {
-      return this.refreshToken;
+    if (this.credential.type === 'access_token') {
+      return this.credential.value;
     }
     // Use cached token if still valid (with 60s buffer)
     if (this.cachedAccessToken && Date.now() < this.tokenExpiresAt - 60_000) {
@@ -37,7 +35,7 @@ export class GmailClient {
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
       body: new URLSearchParams({
         grant_type: 'refresh_token',
-        refresh_token: this.refreshToken,
+        refresh_token: this.credential.value,
         client_id: this.clientId,
         client_secret: this.clientSecret,
       }),
