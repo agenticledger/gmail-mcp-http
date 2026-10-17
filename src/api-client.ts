@@ -57,6 +57,7 @@ export class GmailClient {
     endpoint: string,
     params?: Record<string, string | number | boolean | undefined>,
     body?: any,
+    responseLimit = 32 * 1024 * 1024,
   ): Promise<T> {
     const accessToken = await this.getAccessToken();
     const url = new URL(`${BASE_URL}${endpoint}`);
@@ -71,6 +72,8 @@ export class GmailClient {
 
     const options: RequestInit = {
       method,
+      signal: AbortSignal.timeout(30_000),
+      redirect: 'error',
       headers: {
         Authorization: `Bearer ${accessToken}`,
         Accept: 'application/json',
@@ -87,7 +90,18 @@ export class GmailClient {
     }
 
     if (response.status === 204) return {} as T;
-    return response.json();
+    if (Number(response.headers.get('content-length')) > responseLimit) {
+      await response.body?.cancel(); throw new Error('Gmail response too large');
+    }
+    const reader = response.body?.getReader();
+    const chunks: Uint8Array[] = []; let size = 0;
+    if (reader) for (;;) {
+      const {done, value} = await reader.read(); if (done) break;
+      size += value.length;
+      if (size > responseLimit) {await reader.cancel(); throw new Error('Gmail response too large');}
+      chunks.push(value);
+    }
+    return JSON.parse(Buffer.concat(chunks).toString('utf8')) as T;
   }
 
   // === Profile ===
@@ -112,6 +126,10 @@ export class GmailClient {
 
   async getMessage(messageId: string, format: string = 'full') {
     return this.request<any>('GET', `/users/me/messages/${encodeURIComponent(messageId)}`, { format });
+  }
+
+  async getAttachment(messageId: string, attachmentId: string) {
+    return this.request<any>('GET', `/users/me/messages/${encodeURIComponent(messageId)}/attachments/${encodeURIComponent(attachmentId)}`, undefined, undefined, 14 * 1024 * 1024);
   }
 
   async modifyMessage(messageId: string, addLabelIds?: string[], removeLabelIds?: string[]) {

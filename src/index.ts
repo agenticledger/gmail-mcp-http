@@ -113,7 +113,7 @@ app.get('/', (_req, res) => {
   res.json({
     name: 'Gmail MCP Server',
     provider: 'AgenticLedger',
-    version: '2.0.0',
+    version: '2.1.0',
     description: 'Read, search, send, and manage Gmail messages via MCP.',
     mcpEndpoint: '/mcp',
     transport: 'streamable-http',
@@ -149,7 +149,7 @@ app.get('/health', (_req, res) => {
   res.json({
     status: 'ok',
     server: 'gmail-mcp-http',
-    version: '2.0.0',
+    version: '2.1.0',
     tools: tools.length,
     transport: 'streamable-http',
     authModel: 'broker-first',
@@ -186,7 +186,7 @@ type ClientResolver = () => Promise<ClientResolution>;
 
 function createMCPServer(resolveClient: ClientResolver): Server {
   const server = new Server(
-    { name: 'gmail-mcp-server', version: '2.0.0' },
+    { name: 'gmail-mcp-server', version: '2.1.0' },
     { capabilities: { tools: {} } }
   );
 
@@ -215,7 +215,7 @@ function createMCPServer(resolveClient: ClientResolver): Server {
     }
 
     try {
-      const result = await tool.handler(resolved.client, args as any);
+      const result = await tool.handler(resolved.client, tool.inputSchema.parse(args ?? {}));
       return {
         content: [{ type: 'text' as const, text: JSON.stringify(result, null, 2) }],
       };
@@ -348,7 +348,7 @@ app.delete('/mcp', async (req, res) => {
 
 // ==================== START ====================
 app.listen(PORT, () => {
-  console.log(`Gmail MCP HTTP Server v2.0.0 (broker-first)`);
+  console.log(`Gmail MCP HTTP Server v2.1.0 (broker-first)`);
   console.log(`  MCP endpoint:   ${SERVER_BASE_URL}/mcp`);
   console.log(`  Health check:   ${SERVER_BASE_URL}/health`);
   console.log(`  Tools:          ${tools.length}`);

@@ -1,0 +1,193 @@
+
+      :root {
+        --bg-primary: #0a0e1a;
+        --bg-secondary: #0f1629;
+        --bg-card: #111827;
+        --bg-code: #0d1117;
+        --text-primary: #f1f5f9;
+        --text-secondary: #aebbd0;
+        --border-color: #34425b;
+        --accent-green: #86efac;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: var(--bg-primary);
+        color: var(--text-primary);
+        font:
+          15px/1.7 Inter,
+          -apple-system,
+          BlinkMacSystemFont,
+          sans-serif;
+      }
+      main {
+        max-width: 1120px;
+        margin: auto;
+        padding: 40px 28px 90px;
+      }
+      nav {
+        display: flex;
+        gap: 24px;
+        flex-wrap: wrap;
+        padding-bottom: 36px;
+        border-bottom: 1px solid var(--border-color);
+      }
+      a {
+        color: var(--accent-green);
+      }
+      .hero {
+        padding: 55px 0 35px;
+        max-width: 850px;
+      }
+      .eyebrow {
+        color: var(--accent-green);
+        font: 13px monospace;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+      }
+      h1 {
+        font-size: clamp(38px, 6vw, 68px);
+        line-height: 1.12;
+        letter-spacing: -0.045em;
+        margin: 20px 0;
+      }
+      h2 {
+        font-size: 26px;
+        line-height: 1.3;
+        margin-top: 48px;
+      }
+      h3 {
+        margin: 0;
+        font-size: 17px;
+      }
+      .lead {
+        font-size: 21px;
+        color: var(--text-secondary);
+        max-width: 700px;
+      }
+      .note {
+        border-left: 3px solid var(--accent-green);
+        padding: 8px 20px;
+        background: var(--bg-secondary);
+      }
+      .workflow {
+        font: 15px monospace;
+        border-block: 1px solid var(--border-color);
+        padding: 24px 0;
+        overflow-wrap: anywhere;
+      }
+      .toolbar {
+        display: flex;
+        gap: 20px;
+        align-items: center;
+        margin: 24px 0;
+        flex-wrap: wrap;
+      }
+      input {
+        background: var(--bg-secondary);
+        color: var(--text-primary);
+        border: 1px solid var(--border-color);
+        padding: 12px 16px;
+        font: inherit;
+        width: min(100%, 480px);
+      }
+      details {
+        border-top: 1px solid var(--border-color);
+        padding: 20px 0;
+      }
+      summary {
+        cursor: pointer;
+        display: flex;
+        align-items: baseline;
+        gap: 18px;
+        flex-wrap: wrap;
+      }
+      summary:hover h3 {
+        color: var(--accent-green);
+      }
+      summary .kind {
+        color: var(--text-secondary);
+        font: 12px monospace;
+        width: 48px;
+      }
+      summary .summary-name {
+        font-family: monospace;
+        font-weight: 600;
+      }
+      .body {
+        padding: 12px 0 10px 66px;
+      }
+      .body p {
+        max-width: 850px;
+      }
+      pre {
+        background: var(--bg-code);
+        padding: 20px;
+        overflow: auto;
+        border: 1px solid var(--border-color);
+        font:
+          13px/1.6 ui-monospace,
+          monospace;
+      }
+      button {
+        background: transparent;
+        border: 1px solid var(--border-color);
+        color: var(--text-primary);
+        padding: 8px 14px;
+        cursor: pointer;
+      }
+      button:hover {
+        border-color: var(--accent-green);
+      }
+      :focus-visible {
+        outline: 2px solid var(--accent-green);
+        outline-offset: 4px;
+      }
+      code {
+        overflow-wrap: anywhere;
+      }
+      small,
+      .muted {
+        color: var(--text-secondary);
+      }
+      li {
+        margin-bottom: 10px;
+      }
+      footer {
+        margin-top: 60px;
+        border-top: 1px solid var(--border-color);
+        padding-top: 24px;
+      }
+      html[data-theme="light"] {
+        --bg-primary: #f8fafc;
+        --bg-secondary: #edf2f7;
+        --bg-card: #fff;
+        --bg-code: #fff;
+        --text-primary: #172033;
+        --text-secondary: #475569;
+        --border-color: #a6b4c7;
+        --accent-green: #166534;
+      }
+      @media (max-width: 600px) {
+        main {
+          padding: 24px 18px;
+        }
+        .hero {
+          padding-top: 36px;
+        }
+        .body {
+          padding-left: 0;
+        }
+        summary {
+          gap: 10px;
+        }
+        pre {
+          padding: 12px;
+        }
+        .lead {
+          font-size: 18px;
+        }
+      }
+    
