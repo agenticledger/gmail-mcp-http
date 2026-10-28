@@ -1,6 +1,6 @@
 {
   "name": "gmail-mcp-http",
-  "version": "2.1.0",
+  "version": "2.1.1",
   "description": "Gmail MCP Server — Streamable HTTP, broker-first auth (Connections Broker)",
   "type": "module",
   "main": "dist/index.js",

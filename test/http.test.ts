@@ -40,7 +40,7 @@ test('HTTP discovery advertises attachment schema and rejects invalid args befor
     const health = await (
       await fetch(`http://localhost:${port}/health`)
     ).json();
-    assert.equal(health.version, '2.1.0');
+    assert.equal(health.version, '2.1.1');
   } finally {
     await client.close();
     child.kill();

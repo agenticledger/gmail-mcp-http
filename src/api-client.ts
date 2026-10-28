@@ -151,8 +151,8 @@ export class GmailClient {
 
   // === Send / Reply ===
 
-  async sendMessage(raw: string) {
-    return this.request<any>('POST', '/users/me/messages/send', undefined, { raw });
+  async sendMessage(raw: string, threadId?: string) {
+    return this.request<any>('POST', '/users/me/messages/send', undefined, threadId ? { raw, threadId } : { raw });
   }
 
   // === Drafts ===

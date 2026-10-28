@@ -9,6 +9,15 @@ interface ToolDef {
   handler: (client: GmailClient, args: any) => Promise<any>;
 }
 
+const EMAIL_IN_HEADER = /[^\s<>,;"']+@[^\s<>,;"']+/g;
+/** Bare lower-case addresses in an address header (display names dropped). */
+function addressesIn(header: string | undefined): string[] {
+  return (String(header || '').match(EMAIL_IN_HEADER) || []).map((address) => address.toLowerCase());
+}
+function unique(list: string[]): string[] {
+  return [...new Set(list)];
+}
+
 // Helper to extract readable parts from a Gmail message
 function extractMessageContent(msg: any): any {
   const headers = msg.payload?.headers || [];
@@ -153,11 +162,11 @@ export const tools: ToolDef[] = [
   // === Reply ===
   {
     name: 'gmail_reply',
-    description: 'Reply to an existing email message. Maintains the thread.',
+    description: 'Reply to an existing email message in its thread. Replying to a message this mailbox sent (a follow-up) goes to that message\'s recipients; otherwise to the sender. This mailbox is never added as a recipient.',
     inputSchema: z.object({
       message_id: z.string().describe('The message ID to reply to'),
       body: z.string().describe('Reply body text (plain text)'),
-      reply_all: z.boolean().default(false).describe('Reply to all recipients (true) or just the sender (false)'),
+      reply_all: z.boolean().default(false).describe('Also include the other To/Cc recipients (true) or only the sender, or for your own sent message its To recipients (false)'),
     }),
     handler: async (client, args) => {
       // Get the original message to extract reply headers
@@ -166,22 +175,35 @@ export const tools: ToolDef[] = [
       const getHeader = (name: string) => headers.find((h: any) => h.name.toLowerCase() === name.toLowerCase())?.value;
 
       const from = getHeader('From') || '';
-      const to = getHeader('To') || '';
       const subject = getHeader('Subject') || '';
       const messageIdHeader = getHeader('Message-ID') || getHeader('Message-Id') || '';
+      const references = [getHeader('References'), messageIdHeader].filter(Boolean).join(' ');
 
-      const replyTo = args.reply_all ? [from, to].filter(Boolean).join(', ') : from;
-      const replySubject = subject.startsWith('Re:') ? subject : `Re: ${subject}`;
+      // Address the reply the way Gmail does. Replying to a message this
+      // mailbox sent (a follow-up on outbound mail) goes to that message's
+      // recipients, never back to the mailbox itself; otherwise it goes to the
+      // sender (or Reply-To). The mailbox's own address is never a recipient.
+      const me = String((await client.getProfile())?.emailAddress || '').toLowerCase();
+      const sentByMe = !!me && addressesIn(from).includes(me);
+      const toList = addressesIn(getHeader('To'));
+      const ccList = addressesIn(getHeader('Cc'));
+      const senderSide = addressesIn(getHeader('Reply-To') || from);
+      const primary = sentByMe ? toList : senderSide;
+      const recipients = unique([...primary, ...(args.reply_all ? [...(sentByMe ? [] : toList), ...ccList] : [])])
+        .filter((address) => address !== me);
+      if (recipients.length === 0) throw new Error('No recipient for this reply: the original message has no address other than this mailbox.');
+
+      const replySubject = /^re:/i.test(subject) ? subject : `Re: ${subject}`;
 
       const raw = encodeEmail({
-        to: replyTo,
+        to: recipients.join(', '),
         subject: replySubject,
         body: args.body,
         inReplyTo: messageIdHeader,
-        references: messageIdHeader,
+        references,
       });
 
-      return client.sendMessage(raw);
+      return client.sendMessage(raw, original.threadId);
     },
   },
 
